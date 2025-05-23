@@ -23,7 +23,7 @@ public class JobApplicant { //20-213 large class
 	private String middleName = null;
 	private String lastName = null;
 	
-	public void setName(String firstName, String middleName, String lastName) {
+	public void setName(String firstName, String middleName, String lastName) { //duplicate code
 		this.firstName = firstName == null ? "" : firstName;
 		this.middleName = middleName == null ? "" : middleName;
 		this.lastName = lastName == null ? "" : lastName;
