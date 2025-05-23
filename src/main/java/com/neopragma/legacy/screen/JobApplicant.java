@@ -14,200 +14,211 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
-/**
- * Job applicant class.
- */
-public class JobApplicant { //20-213 large class
-	
-	private String firstName = null;
-	private String middleName = null;
-	private String lastName = null;
-	
-	public void setName(String firstName, String middleName, String lastName) { //duplicate code
-		this.firstName = firstName == null ? "" : firstName;
-		this.middleName = middleName == null ? "" : middleName;
-		this.lastName = lastName == null ? "" : lastName;
-	}
-	
-	public void setSpanishName(String primerNombre, String segundoNombre, //duplicate code 2
-							   String primerApellido, String segundoApellido) {
-		this.firstName = primerNombre == null ? "" : primerNombre;
-		this.middleName = segundoNombre == null ? "" : segundoNombre;
-		if ( primerApellido != null ) {
-  		    StringBuilder sb = new StringBuilder(primerApellido);
-		    sb.append(segundoApellido == null ? null : " " + segundoApellido);
-		    this.lastName = sb.toString();
-		} else {
-			this.lastName = "";
-		}
-	}
-	
-	public String formatLastNameFirst() {
-		StringBuilder sb = new StringBuilder(lastName);
-		sb.append(", ");
-		sb.append(firstName);
-		if ( middleName.length() > 0 ) {
-			sb.append(" ");
-			sb.append(middleName);
-		}
-		return sb.toString();
-	}
-	
-	public int validateName() {
-		if ( firstName.length() > 0 && lastName.length() > 0 ) {
-			return 0;
-		} else {
-			return 6;
-		}
-	}
-	
-	private String ssn;
-	
-	private String[] specialCases = new String[] {
-	    "219099999", "078051120"
-	};
-	
-	private String zipCode;    
-	private String city;
-	private String state;
+// Parameter object to handle data clumps
+class ApplicantInfo {
+    public String firstName;
+    public String middleName;
+    public String lastName;
+    public String ssn;
+    public String zipCode;
 
-	public void setSsn(String ssn) {
-		if ( ssn.matches("(\\d{3}-\\d{2}-\\d{4}|\\d{9})") ) {
-  		    this.ssn = ssn.replaceAll("-", "");
-		} else {
-  		    this.ssn = "";
-		}    
-	}
-	
-	public String formatSsn() {
-		StringBuilder sb = new StringBuilder(ssn.substring(0,3));
-		sb.append("-");
-		sb.append(ssn.substring(3,5));
-		sb.append("-");
-		sb.append(ssn.substring(5));
-		return sb.toString();
-	}
+    public ApplicantInfo(String firstName, String middleName, String lastName, String ssn, String zipCode) {
+        this.firstName = firstName;
+        this.middleName = middleName;
+        this.lastName = lastName;
+        this.ssn = ssn;
+        this.zipCode = zipCode;
+    }
+}
 
-	public int validateSsn() {
-		if ( !ssn.matches("\\d{9}") ) {
-			return 1;
-		}
-		if ( "000".equals(ssn.substring(0,3)) || 
-			 "666".equals(ssn.substring(0,3)) ||
-			 "9".equals(ssn.substring(0,1)) ) {
-			return 2;
-		}
-		if ( "0000".equals(ssn.substring(5)) ) {
-			return 3;
-		}
-		for (int i = 0 ; i < specialCases.length ; i++ ) {
-			if ( ssn.equals(specialCases[i]) ) {
-				return 4;
-			}
-		}
-		return 0;
-	}
+// Extracted class for name handling
+class PersonalInformation {
+    private String firstName;
+    private String middleName;
+    private String lastName;
 
-	public void setZipCode(String zipCode) throws URISyntaxException, IOException { //long method
-		this.zipCode = zipCode;
-		// Use a service to look up the city and state based on zip code.
-		// Save the returned city and state if content length is greater than zero.
-		URI uri = new URIBuilder()
-            .setScheme("http")
-            .setHost("www.zip-codes.com")
-            .setPath("/search.asp")
-            .setParameter("fld-zip", this.zipCode)
-            .setParameter("selectTab", "0")
-            .setParameter("srch-type", "city")
-            .build();
+    public void setName(String firstName, String middleName, String lastName) {
+        this.firstName = formatNamePart(firstName);
+        this.middleName = formatNamePart(middleName);
+        this.lastName = formatNamePart(lastName);
+    }
+
+    public void setSpanishName(String primerNombre, String segundoNombre, String primerApellido, String segundoApellido) {
+        this.firstName = formatNamePart(primerNombre);
+        this.middleName = formatNamePart(segundoNombre);
+        if (primerApellido != null) {
+            StringBuilder sb = new StringBuilder(primerApellido);
+            if (segundoApellido != null && !segundoApellido.isEmpty()) {
+                sb.append(" ").append(segundoApellido);
+            }
+            this.lastName = sb.toString();
+        } else {
+            this.lastName = "";
+        }
+    }
+
+    private String formatNamePart(String part) {
+        return part == null ? "" : part;
+    }
+
+    public String formatLastNameFirst() {
+        StringBuilder sb = new StringBuilder(lastName);
+        sb.append(", ").append(firstName);
+        if (!middleName.isEmpty()) {
+            sb.append(" ").append(middleName);
+        }
+        return sb.toString();
+    }
+}
+
+// Extracted class for SSN handling
+class SSNValidator {
+    private String ssn;
+    private final String[] specialCases = { "219099999", "078051120" };
+
+    public void setSsn(String ssn) {
+        this.ssn = ssn.matches("(\\d{3}-\\d{2}-\\d{4}|\\d{9})") ? ssn.replaceAll("-", "") : "";
+    }
+
+    public String formatSsn() {
+        if (ssn.length() != 9) return "";
+        return ssn.substring(0, 3) + "-" + ssn.substring(3, 5) + "-" + ssn.substring(5);
+    }
+
+    public int validateSsn() {
+        if (!ssn.matches("\\d{9}")) return 1;
+        if ("000".equals(ssn.substring(0, 3)) || "666".equals(ssn.substring(0, 3)) || ssn.startsWith("9")) return 2;
+        if ("0000".equals(ssn.substring(5))) return 3;
+        for (String s : specialCases) {
+            if (ssn.equals(s)) return 4;
+        }
+        return 0;
+    }
+}
+
+// Extracted class for zip code service
+class ZipCodeService {
+    private String city;
+    private String state;
+    private String zipCode;
+
+    public void setZipCode(String zipCode) throws URISyntaxException, IOException {
+        this.zipCode = zipCode;
+        String response = getZipCodeResponse(zipCode);
+        parseCityStateFromResponse(response);
+    }
+
+    private String getZipCodeResponse(String zipCode) throws URISyntaxException, IOException {
+        URI uri = new URIBuilder()
+                .setScheme("http")
+                .setHost("www.zip-codes.com")
+                .setPath("/search.asp")
+                .setParameter("fld-zip", zipCode)
+                .setParameter("selectTab", "0")
+                .setParameter("srch-type", "city")
+                .build();
+        return executeHttpRequest(uri);
+    }
+
+    private String executeHttpRequest(URI uri) throws IOException {
         HttpGet request = new HttpGet(uri);
-        CloseableHttpClient httpclient = HttpClients.createDefault();
-        CloseableHttpResponse response = httpclient.execute(request);
-        try {
+        try (CloseableHttpClient httpClient = HttpClients.createDefault();
+             CloseableHttpResponse response = httpClient.execute(request)) {
             HttpEntity entity = response.getEntity();
             if (entity != null) {
-                long len = entity.getContentLength();
-              	BufferedReader rd = new BufferedReader(
-                        new InputStreamReader(response.getEntity().getContent()));
-           		StringBuffer result = new StringBuffer();
-           		String line = "";
-           		while ((line = rd.readLine()) != null) {
-           			result.append(line);
-       		    }
-                int metaOffset = result.indexOf("<meta ");
-                int contentOffset = result.indexOf(" content=\"Zip Code ", metaOffset);
-                contentOffset += 19;
-                contentOffset = result.indexOf(" - ", contentOffset);
-                contentOffset += 3;
-                int stateOffset = result.indexOf(" ", contentOffset);
-                city = result.substring(contentOffset, stateOffset);
-                stateOffset += 1;
-                state = result.substring(stateOffset, stateOffset+2);
-            } else {
-            	city = "";
-            	state = "";
+                BufferedReader reader = new BufferedReader(new InputStreamReader(entity.getContent()));
+                StringBuilder result = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    result.append(line);
+                }
+                return result.toString();
             }
-        } finally {
-            response.close();
+            return "";
         }
-	}
+    }
 
-	public String getCity() {
-		return city;
-	}
+    private void parseCityStateFromResponse(String response) {
+        int metaOffset = response.indexOf("<meta ");
+        int contentOffset = response.indexOf(" content=\"Zip Code ", metaOffset) + 19;
+        contentOffset = response.indexOf(" - ", contentOffset) + 3;
+        int stateOffset = response.indexOf(" ", contentOffset);
+        city = response.substring(contentOffset, stateOffset);
+        state = response.substring(stateOffset + 1, stateOffset + 3);
+    }
 
-	public String getState() {
-		return state;
-	}
-	
-	public void add(String firstName, //data clump
-			       String middleName,
-			       String lastName,
-			       String ssn,
-			       String zipCode) throws URISyntaxException, IOException {
-		setName(firstName, middleName, lastName);
-		setSsn(ssn);
-		setZipCode(zipCode);
-		save();
-	}
-	
-	private void save() {
-		//TODO save information to a database
-		System.out.println("Saving to database: " + formatLastNameFirst());
-	}
-	
-	public static void main(String[] args) throws URISyntaxException, IOException { //2nd long method and also data clump
-		JobApplicant jobApplicant = new JobApplicant();
-		boolean done = false;
-		Scanner scanner = new Scanner(System.in);
-		String firstName = "";
-		String middleName = "";
-		String lastName = "";
-		String ssn = "";
-		String zipCode = "";
-		while (!done) {
-			System.out.println("Please enter info about a job candidate or 'quit' to quit");
-			System.out.println("First name?");
-            firstName = scanner.nextLine();		
-            if (firstName.equals("quit")) {
-            	scanner.close();
-            	System.out.println("Bye-bye!");
-            	done = true;
-            	break;
+    public String getCity() {
+        return city;
+    }
+
+    public String getState() {
+        return state;
+    }
+}
+
+// Refactored JobApplicant class
+public class JobApplicant {
+    private PersonalInformation personalInfo = new PersonalInformation();
+    private SSNValidator ssnValidator = new SSNValidator();
+    private ZipCodeService zipCodeService = new ZipCodeService();
+
+    public void add(ApplicantInfo info) throws URISyntaxException, IOException {
+        personalInfo.setName(info.firstName, info.middleName, info.lastName);
+        ssnValidator.setSsn(info.ssn);
+        zipCodeService.setZipCode(info.zipCode);
+        save();
+    }
+
+    private void save() {
+        System.out.println("Saving to database: " + personalInfo.formatLastNameFirst());
+    }
+
+    public static void main(String[] args) throws URISyntaxException, IOException {
+        startUserInputLoop();
+    }
+
+    private static void startUserInputLoop() throws URISyntaxException, IOException {
+        Scanner scanner = new Scanner(System.in);
+        boolean done = false;
+
+        while (!done) {
+            System.out.println("Please enter info about a job candidate or 'quit' to quit");
+            System.out.println("First name?");
+            String firstName = scanner.nextLine();
+
+            if (handleQuit(firstName, scanner)) {
+                done = true;
+                break;
             }
-			System.out.println("Middle name?");
-            middleName = scanner.nextLine();
-			System.out.println("Last name?");
-            lastName = scanner.nextLine();			
-			System.out.println("SSN?");
-            ssn = scanner.nextLine();			
-			System.out.println("Zip Code?");
-            zipCode = scanner.nextLine();			
-            jobApplicant.setName(firstName, middleName, lastName);          
-            jobApplicant.setSsn(ssn);
-            jobApplicant.setZipCode(zipCode);
-            jobApplicant.save();
-		}
-	}
-	
+
+            promptAndCreateApplicant(scanner, firstName);
+        }
+    }
+
+    private static boolean handleQuit(String input, Scanner scanner) {
+        if (input.equalsIgnoreCase("quit")) {
+            System.out.println("Bye-bye!");
+            scanner.close();
+            return true;
+        }
+        return false;
+    }
+
+    private static void promptAndCreateApplicant(Scanner scanner, String firstName) throws URISyntaxException, IOException {
+        System.out.println("Middle name?");
+        String middleName = scanner.nextLine();
+
+        System.out.println("Last name?");
+        String lastName = scanner.nextLine();
+
+        System.out.println("SSN?");
+        String ssn = scanner.nextLine();
+
+        System.out.println("Zip Code?");
+        String zipCode = scanner.nextLine();
+
+        ApplicantInfo info = new ApplicantInfo(firstName, middleName, lastName, ssn, zipCode);
+        JobApplicant jobApplicant = new JobApplicant();
+        jobApplicant.add(info);
+    }
 }
