@@ -17,7 +17,7 @@ import org.apache.http.impl.client.HttpClients;
 /**
  * Job applicant class.
  */
-public class JobApplicant {
+public class JobApplicant { //20-213 large class
 	
 	private String firstName = null;
 	private String middleName = null;
