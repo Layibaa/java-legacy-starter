@@ -160,7 +160,7 @@ public class JobApplicant { //20-213 large class
 		return state;
 	}
 	
-	public void add(String firstName,
+	public void add(String firstName, //data clump
 			       String middleName,
 			       String lastName,
 			       String ssn,
