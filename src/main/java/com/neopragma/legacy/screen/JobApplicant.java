@@ -176,7 +176,7 @@ public class JobApplicant { //20-213 large class
 		System.out.println("Saving to database: " + formatLastNameFirst());
 	}
 	
-	public static void main(String[] args) throws URISyntaxException, IOException {
+	public static void main(String[] args) throws URISyntaxException, IOException { //2nd long method
 		JobApplicant jobApplicant = new JobApplicant();
 		boolean done = false;
 		Scanner scanner = new Scanner(System.in);
