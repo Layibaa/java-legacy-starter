@@ -29,7 +29,7 @@ public class JobApplicant { //20-213 large class
 		this.lastName = lastName == null ? "" : lastName;
 	}
 	
-	public void setSpanishName(String primerNombre, String segundoNombre,
+	public void setSpanishName(String primerNombre, String segundoNombre, //duplicate code 2
 							   String primerApellido, String segundoApellido) {
 		this.firstName = primerNombre == null ? "" : primerNombre;
 		this.middleName = segundoNombre == null ? "" : segundoNombre;
