@@ -108,7 +108,7 @@ public class JobApplicant { //20-213 large class
 		return 0;
 	}
 
-	public void setZipCode(String zipCode) throws URISyntaxException, IOException {
+	public void setZipCode(String zipCode) throws URISyntaxException, IOException { //long method
 		this.zipCode = zipCode;
 		// Use a service to look up the city and state based on zip code.
 		// Save the returned city and state if content length is greater than zero.
